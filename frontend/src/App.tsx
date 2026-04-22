@@ -5,18 +5,31 @@ import { useState } from 'react';
 function App() {
   const [activeTab, setActiveTab] = useState<'tracks' | 'signals'>('tracks');
 
-  const { isPending, error, data } = useQuery({
+  const {
+    isPending: signalsIsPending,
+    error: signalsError,
+    data: signalsData,
+  } = useQuery({
     queryKey: ['signals'],
     queryFn: async () => {
       const response = await fetch('/api/signals');
       return await response.json();
     },
+    enabled: activeTab === 'signals',
   });
 
-  if (isPending) return 'Loading...';
-
-  if (error) return 'An error has occurred: ' + error.message;
-  console.log(data);
+  const {
+    isPending: tracksIsPending,
+    error: tracksError,
+    data: tracksData,
+  } = useQuery({
+    queryKey: ['tracks'],
+    queryFn: async () => {
+      const response = await fetch('/api/tracks');
+      return await response.json();
+    },
+    enabled: activeTab === 'tracks',
+  });
 
   return (
     <div>
@@ -47,12 +60,16 @@ function App() {
         <div className="p-4">
           {activeTab === 'tracks' && (
             <div className="rounded-xl bg-gray-50 p-4">
+              {tracksIsPending && 'Loading...'}
+              {tracksError && `An error has occurred: ${tracksError.message}`}
               <h1 className="mb-2 text-lg font-semibold">Track content to go here</h1>
             </div>
           )}
 
           {activeTab === 'signals' && (
             <div className="rounded-xl bg-gray-50 p-4">
+              {signalsIsPending && 'Loading...'}
+              {signalsError && `An error has occurred: ${signalsError.message}`}
               <h1 className="mb-2 text-lg font-semibold">Signal content to go here</h1>
             </div>
           )}
