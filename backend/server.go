@@ -15,6 +15,7 @@ func main() {
 	e.GET("/tracks", tracks.GetTracks)
 	e.GET("/tracks/:id", tracks.GetTrackByID)
 	e.GET("/signals", signals.GetSignals)
+	e.GET("/signals/:id", signals.GetSignalByID)
 
 	if err := e.Start(":1323"); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
