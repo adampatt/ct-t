@@ -1,15 +1,21 @@
-CrossTech test
+## CrossTech test
 
-This program uses Echo to create API's that read from a .json data source. It exposes 4 API's listed below.
+This program uses Echo to create API's that read from a .json data source. It exposes API's listed below.
+
+### Running the code
 
 To start the program run
 `go run server.go`
 
-GetTracks
+## Endpoints
+
+### GetTracks
+
 Fetches all track data and the signals associated with it.
 
+Returned data format
+
 ```
-Output
 []{
 TrackId int
 Source  string
@@ -23,11 +29,13 @@ Signals []{
 }
 ```
 
-GetTrackByID
+### GetTrackByID
+
 Fetches track data for a single track found using its id.
 
+Returned data format
+
 ```
-Output
 TrackId int
 Source  string
 Target  string
@@ -39,22 +47,26 @@ Signals []{
 }
 ```
 
-GetSignals
+### GetSignals
+
 Fetches all track data, filters this to leave only signal data.
 
+Returned data format
+
 ```
-Output
 []{
 SignalId int
 SignalName string
 }
 ```
 
-GetSignalByID
+### GetSignalByID
+
 Fetches all track data, filters this to leave only signal data. Then filters again to find a signal by using its id.
 
+Returned data format
+
 ```
-Output
 SignalId int
 SignalName string
 ```
