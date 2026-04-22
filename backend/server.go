@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -25,8 +28,20 @@ func main() {
 		Signals *[]SignalInput `json:"signal_ids"`
 	}
 
-	e.GET("/", func(c *echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+	e.GET("/tracks", func(c *echo.Context) error {
+		data, err := os.ReadFile("data.json")
+		if err != nil {
+			return err
+		}
+
+		data = bytes.ReplaceAll(data, []byte("NaN"), []byte("null"))
+
+		var tracks []TrackInput
+		if err := json.Unmarshal(data, &tracks); err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, tracks)
 	})
 
 	if err := e.Start(":1323"); err != nil {
