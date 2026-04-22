@@ -3,8 +3,8 @@ import { z } from 'zod';
 const SignalSchema = z.object({
   signal_id: z.number(),
   signal_name: z.string(),
-  elr: z.string().optional(),
-  mileage: z.number().optional(),
+  elr: z.string().optional().nullable(),
+  mileage: z.number().optional().nullable(),
 });
 
 const SignalsSchema = z.array(SignalSchema);
@@ -15,6 +15,7 @@ export const fetchSignals = async (): Promise<Signal[] | null> => {
   const response = await fetch('/api/signals');
 
   if (!response.ok) {
+    // throw error for useQuery to consume
     throw new Error(`HTTP error: ${response.status}`);
   }
 
@@ -50,8 +51,8 @@ export const fetchSignalByID = async (id: number): Promise<Signal | null> => {
 
 const TrackSchema = z.object({
   track_id: z.number(),
-  source: z.string(),
-  target: z.string(),
+  source: z.string().nullable(),
+  target: z.string().nullable(),
   signal_ids: z.array(SignalSchema),
 });
 
