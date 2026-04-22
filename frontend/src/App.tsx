@@ -1,12 +1,15 @@
 import './App.css';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { fetchSignals, fetchTracks, fetchTrackById } from './queries';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'tracks' | 'signals'>('tracks');
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
   const [selectedSignalId, setSelectedSignalId] = useState<number | null>(null);
+
+  const [trackIdFilter, setTrackIdFilter] = useState('');
+  const [stationFilter, setStationFilter] = useState('');
 
   const {
     isPending: signalsIsPending,
@@ -28,6 +31,17 @@ function App() {
     enabled: activeTab === 'tracks',
   });
 
+  const filteredTracks = useMemo(() => {
+    return tracksData.filter((td) => {
+      const matchesTrackId = String(td.track_id).toLowerCase().includes(trackIdFilter.toLowerCase());
+
+      const matchesStation =
+        td.source.toLowerCase().includes(stationFilter.toLowerCase()) || td.target.toLowerCase().includes(stationFilter.toLowerCase());
+
+      return matchesTrackId && matchesStation;
+    });
+  }, [tracksData, trackIdFilter, stationFilter]);
+
   const effectiveSelectedTrackId = selectedTrackId ?? tracksData[0]?.track_id ?? null;
 
   const effectiveSelectedSignalId = selectedSignalId ?? signalsData[0]?.signal_id ?? null;
@@ -37,8 +51,6 @@ function App() {
     queryFn: () => fetchTrackById(effectiveSelectedTrackId!),
     enabled: activeTab === 'tracks' && effectiveSelectedTrackId !== null,
   });
-
-  console.log(selectedTrack);
 
   const signalsFromTrackResponse = [
     { signal_id: 453, signal_name: 'SIG:AW148(CO) ACTON WELLS JCN', elr: 'LPC5', mileage: 3.1745 },
@@ -51,10 +63,10 @@ function App() {
   ];
   return (
     <div>
-      <h1>CrossTech Platform</h1>
-      <div className="w-full rounded-l shadow-sm">
+      <h1 className="text-xl font-bold pb-8 pt-8 text-gray-900">CrossTech Platform</h1>
+      <div className="flex h-screen flex-col overflow-hidden rounded-l shadow-sm">
         {/* Tabs */}
-        <div className="flex w-1/3">
+        <div className="flex w-1/3 shrink-0">
           <button
             onClick={() => setActiveTab('tracks')}
             className={`flex-1 px-4 py-3 text-sm font-medium transition ${
@@ -75,42 +87,70 @@ function App() {
         </div>
 
         {/* Content box */}
-        <div className="p-4">
+        <div className="flex min-h-0 flex-1 flex-col p-4">
           {activeTab === 'tracks' && (
-            <div className="flex w-full gap-4">
-              <div className="flex-1 rounded-2xl bg-gray-50 p-4">
+            <div className="flex w-full gap-4 p-4">
+              <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-gray-50 p-4">
                 {tracksIsPending && 'Loading...'}
                 {tracksError && `An error has occurred: ${tracksError.message}`}
-                <div className="max-h-[70vh] overflow-auto rounded-lg border border-gray-200">
-                  <table className="min-w-full">
+
+                <div className="flex flex-col space-y-3 pb-5 pt-3 pl-3">
+                  <div className="flex flex-col items-start">
+                    <h3 className="text-m font-semibold text-gray-900">Track information</h3>
+                    <p className="text-sm text-gray-400">All tracks</p>
+                  </div>
+
+                  <div className="flex w-2/3 items-center justify-center gap-3">
+                    <span className="text-m font-semibold text-gray-900">Filter:</span>
+
+                    <input
+                      type="text"
+                      value={trackIdFilter}
+                      onChange={(e) => setTrackIdFilter(e.target.value)}
+                      placeholder="Track ID"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    />
+
+                    <input
+                      type="text"
+                      value={stationFilter}
+                      onChange={(e) => setStationFilter(e.target.value)}
+                      placeholder="Source or target"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-gray-200">
+                  <table className="min-w-full table-fixed border-collapse">
                     <thead className="sticky top-0 bg-gray-100">
                       <tr>
-                        <th className="px-2 py-2 text-sm font-semibold text-gray-700">Track ID</th>
-                        <th className="px-2 py-2 text-sm font-semibold text-gray-700">Source Station</th>
-                        <th className="px-2 py-2 text-sm font-semibold text-gray-700">Target Station</th>
+                        <th className="w-1/4 px-4 py-3 text-left text-m font-semibold text-gray-900">Track ID</th>
+                        <th className="w-3/8 px-4 py-3 text-left text-m font-semibold text-gray-900">Source</th>
+                        <th className="w-3/8 px-4 py-3 text-left text-m font-semibold text-gray-900">Target</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tracksData.map((td) => (
+                      {filteredTracks.map((td) => (
                         <tr
                           key={td.track_id}
                           className={`cursor-pointer border-t border-gray-200 hover:bg-gray-100 ${
-                            effectiveSelectedTrackId === td.track_id ? 'bg-gray-300' : 'bg-white-100'
+                            effectiveSelectedTrackId === td.track_id ? 'bg-gray-300' : 'bg-white'
                           }`}
                           onClick={() => setSelectedTrackId(td.track_id)}
                         >
-                          <td className="px-4 py-3 text-sm text-gray-800">{td.track_id}</td>
-                          <td className="px-4 py-3 text-sm text-gray-800">{td.source}</td>
-                          <td className="px-4 py-3 text-sm text-gray-800">{td.target}</td>
+                          <td className="px-4 py-3 text-right text-sm text-gray-800">{td.track_id}</td>
+                          <td className="px-4 py-3 text-left text-sm text-gray-800">{td.source}</td>
+                          <td className="px-4 py-3 text-left text-sm text-gray-800">{td.target}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               </div>
-
               <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md max-h-[100vh]">
-                <div className="space-y-0">
+                <div className="space-y-3">
+                  <h3 className="text-m font-semibold text-gray-900">All signals assoicated with track id {selectedTrackId}</h3>
                   {signalsFromTrackResponse.map((signal, index) => (
                     <div key={signal.signal_id}>
                       <div className="rounded-xl bg-gray-100 px-4 py-6 text-center">
@@ -139,16 +179,23 @@ function App() {
           )}
 
           {activeTab === 'signals' && (
-            <div className="flex w-full gap-4">
-              <div className="flex-1 rounded-2xl bg-gray-50 p-4">
+            <div className="flex w-full gap-4 p-4">
+              <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-gray-50 p-4">
                 {signalsIsPending && 'Loading...'}
                 {signalsError && `An error has occurred: ${signalsError.message}`}
-                <div className="max-h-[70vh] overflow-auto rounded-lg border border-gray-200">
+                <div className="flex flex-col space-y-3 pb-5 pt-3 pl-3">
+                  <div className="flex flex-col items-start">
+                    <h3 className="text-m font-semibold text-gray-900">Signal information</h3>
+                    <p className="text-sm text-gray-400">All available signals</p>
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-gray-200">
                   <table className="min-w-full">
                     <thead className="sticky top-0 bg-gray-100">
                       <tr>
-                        <th className="px-2 py-2 text-sm font-semibold text-gray-700">Signal ID</th>
-                        <th className="px-2 py-2 text-sm font-semibold text-gray-700">Signal Name</th>
+                        <th className="px-2 py-3 text-m text-left font-semibold text-gray-900">Signal ID</th>
+                        <th className="px-2 py-3 text-m text-left font-semibold text-gray-900">Signal Name</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -160,8 +207,8 @@ function App() {
                           }`}
                           onClick={() => setSelectedSignalId(sd.signal_id)}
                         >
-                          <td className="px-4 py-3 text-sm text-gray-800">{sd.signal_id}</td>
-                          <td className="px-4 py-3 text-sm text-gray-800">{sd.signal_name}</td>
+                          <td className="px-4 py-3 text-sm text-left text-gray-800">{sd.signal_id}</td>
+                          <td className="px-4 py-3 text-sm text-left text-gray-800">{sd.signal_name}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -170,9 +217,8 @@ function App() {
               </div>
 
               <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md max-h-[100vh]">
-                <div className="space-y-0">
-                  <h2>Tracks</h2>
-                  <p className="text-sm ">All tracks the signal is related to</p>
+                <div className="space-y-3">
+                  <h3 className="text-m font-semibold text-gray-900">All tracks assoicated with signal {selectedSignalId}</h3>
                   {tracksFromSignalResponse.map((track, index) => (
                     <div key={track.track_id}>
                       <div className="rounded-xl bg-gray-100 px-4 py-6 text-center">
