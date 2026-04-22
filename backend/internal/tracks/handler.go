@@ -1,36 +1,17 @@
 package tracks
 
 import (
-	"bytes"
-	"ct/test/models"
-	"encoding/json"
+	"ct/test/internal/data"
 	"errors"
 	"io/fs"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/labstack/echo/v5"
 )
 
-func load() ([]models.TrackInput, error) {
-	data, err := os.ReadFile("data.json")
-	if err != nil {
-		return nil, err
-	}
-
-	data = bytes.ReplaceAll(data, []byte("NaN"), []byte("null"))
-
-	var tracks []models.TrackInput
-	if err := json.Unmarshal(data, &tracks); err != nil {
-		return nil, err
-	}
-
-	return tracks, nil
-}
-
 func GetTracks(c *echo.Context) error {
-	tracks, err := load()
+	tracks, err := data.Load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			c.Logger().Error("data.json not found")
@@ -52,7 +33,7 @@ func GetTrackByID(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid track id")
 	}
 
-	tracks, err := load()
+	tracks, err := data.Load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			c.Logger().Error("data.json not found")
