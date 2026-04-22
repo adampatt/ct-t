@@ -12,7 +12,7 @@ import (
 )
 
 func GetSignals(c *echo.Context) error {
-	data, err := data.Load()
+	_, signals, err := data.Load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			c.Logger().Error("data.json not found")
@@ -24,10 +24,8 @@ func GetSignals(c *echo.Context) error {
 	}
 
 	var s []models.Signal
-	for _, t := range data {
-		for _, si := range *t.Signals {
-			s = append(s, models.Signal{SignalId: si.SignalId, SignalName: si.SignalName})
-		}
+	for _, sig := range signals {
+		s = append(s, models.Signal{SignalId: sig.SignalId, SignalName: sig.SignalName})
 	}
 
 	return c.JSON(http.StatusOK, s)
@@ -41,28 +39,41 @@ func GetSignalByID(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid signal id")
 	}
 
-	data, err := data.Load()
+	tracks, _, err := data.Load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			c.Logger().Error("data.json not found")
 			return echo.NewHTTPError(http.StatusInternalServerError, "unable to load data")
 		}
-
-		c.Logger().Error("failed to load the track data", "err", err)
+		c.Logger().Error("failed to load data", "err", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to load data")
 	}
-	var s []models.Signal
-	for _, t := range data {
-		for _, si := range *t.Signals {
-			s = append(s, models.Signal{SignalId: si.SignalId, SignalName: si.SignalName})
+
+	response := models.SignalResponse{}
+	found := false
+
+	for _, t := range tracks {
+		for _, s := range t.Signals {
+			if s.SignalId == id {
+				if !found {
+					response.SignalId = s.SignalId
+					response.SignalName = s.SignalName
+					found = true
+				}
+				response.Tracks = append(response.Tracks, models.SignalTrack{
+					TrackId: t.TrackId,
+					Source:  t.Source,
+					Target:  t.Target,
+					Elr:     s.Elr,
+					Mileage: s.Mileage,
+				})
+			}
 		}
 	}
 
-	for _, sig := range s {
-		if sig.SignalId == id {
-			return c.JSON(http.StatusOK, sig)
-		}
+	if !found {
+		return echo.NewHTTPError(http.StatusNotFound, "signal not found")
 	}
 
-	return c.JSON(http.StatusNotFound, "signal not found")
+	return c.JSON(http.StatusOK, response)
 }

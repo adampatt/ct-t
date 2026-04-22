@@ -11,7 +11,7 @@ import (
 )
 
 func GetTracks(c *echo.Context) error {
-	tracks, err := data.Load()
+	tracks, _, err := data.Load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			c.Logger().Error("data.json not found")
@@ -33,7 +33,7 @@ func GetTrackByID(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid track id")
 	}
 
-	tracks, err := data.Load()
+	tracks, _, err := data.Load()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			c.Logger().Error("data.json not found")
@@ -50,5 +50,5 @@ func GetTrackByID(c *echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusNotFound, "unable to find track")
+	return echo.NewHTTPError(http.StatusNotFound, "unable to find track")
 }
