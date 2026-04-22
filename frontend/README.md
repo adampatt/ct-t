@@ -1,6 +1,6 @@
 ## CrossTech test
 
-This is a small app enabling the user to explore the relationshp between track and signal data.
+This is a small app enabling the user to explore the relationship between track and signal data.
 This program uses Vite, Tanstack Query, TailwindCSS and zod to fetch and display data.
 
 ### Running the code
