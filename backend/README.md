@@ -7,6 +7,10 @@ This program uses Echo to create API's that read from a .json data source. It ex
 To start the program run
 `go run server.go`
 
+## Data validation and cleanup
+
+The json data file included Python-style NaN values. I treated them as missing values rather than converting them to 0.
+
 ## Endpoints
 
 ### GetTracks
