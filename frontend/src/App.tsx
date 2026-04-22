@@ -1,6 +1,7 @@
 import './App.css';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { fetchSignals } from './queries';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'tracks' | 'signals'>('tracks');
@@ -8,13 +9,10 @@ function App() {
   const {
     isPending: signalsIsPending,
     error: signalsError,
-    data: signalsData,
+    data: signalsData = [],
   } = useQuery({
     queryKey: ['signals'],
-    queryFn: async () => {
-      const response = await fetch('/api/signals');
-      return await response.json();
-    },
+    queryFn: fetchSignals,
     enabled: activeTab === 'signals',
   });
 
@@ -63,7 +61,7 @@ function App() {
               {tracksIsPending && 'Loading...'}
               {tracksError && `An error has occurred: ${tracksError.message}`}
               <h1 className="mb-2 text-lg font-semibold">Track content to go here</h1>
-              <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+              {/* <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Track ID</th>
@@ -83,7 +81,7 @@ function App() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table> */}
             </div>
           )}
 
@@ -102,11 +100,11 @@ function App() {
                 <tbody>
                   {signalsData.map((signal) => (
                     <tr
-                      key={signal.ID}
+                      key={signal.signal_id}
                       className="border-t border-gray-200"
                     >
-                      {/* <td className="px-4 py-3 text-sm text-gray-800">{signal.track_id}</td> */}
-                      {/* <td className="px-4 py-3 text-sm text-gray-800">{signal.}</td> */}
+                      <td className="px-4 py-3 text-sm text-gray-800">{signal.signal_id}</td>
+                      <td className="px-4 py-3 text-sm text-gray-800">{signal.signal_name}</td>
                     </tr>
                   ))}
                 </tbody>
