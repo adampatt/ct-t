@@ -1,7 +1,7 @@
 import './App.css';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
-import { fetchSignals, fetchTracks, fetchTrackById } from './queries';
+import { fetchSignals, fetchTracks, fetchTrackById, fetchSignalByID } from './queries';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'tracks' | 'signals'>('tracks');
@@ -11,6 +11,9 @@ function App() {
   const [trackIdFilter, setTrackIdFilter] = useState('');
   const [stationFilter, setStationFilter] = useState('');
 
+  // Data fetching
+
+  // Data for tabs
   const {
     isPending: signalsIsPending,
     error: signalsError,
@@ -31,6 +34,24 @@ function App() {
     enabled: activeTab === 'tracks',
   });
 
+  const effectiveSelectedTrackId = selectedTrackId ?? tracksData[0]?.track_id ?? null;
+  const effectiveSelectedSignalId = selectedSignalId ?? signalsData[0]?.signal_id ?? null;
+
+  // https://tanstack.com/query/v5/docs/framework/react/guides/query-keys#if-your-query-function-depends-on-a-variable-include-it-in-your-query-key
+  // using the selectedTrackID because tracksData[0]?.track_id exists the query was being run, but selectedTrackID is null because the user has not slelected a value yet. Causing the query to run with null.
+  const { data: signalsByIDData } = useQuery({
+    queryKey: ['signals', effectiveSelectedSignalId],
+    queryFn: () => fetchSignalByID(effectiveSelectedSignalId),
+    enabled: activeTab === 'signals' && effectiveSelectedSignalId !== null,
+  });
+
+  const { data: tracksByIDData } = useQuery({
+    queryKey: ['track', effectiveSelectedTrackId],
+    queryFn: () => fetchTrackById(effectiveSelectedTrackId),
+    enabled: activeTab === 'tracks' && effectiveSelectedTrackId !== null,
+  });
+
+  // Used to filter table data
   const filteredTracks = useMemo(() => {
     return tracksData.filter((td) => {
       const matchesTrackId = String(td.track_id).toLowerCase().includes(trackIdFilter.toLowerCase());
@@ -42,25 +63,6 @@ function App() {
     });
   }, [tracksData, trackIdFilter, stationFilter]);
 
-  const effectiveSelectedTrackId = selectedTrackId ?? tracksData[0]?.track_id ?? null;
-
-  const effectiveSelectedSignalId = selectedSignalId ?? signalsData[0]?.signal_id ?? null;
-
-  const { data: selectedTrack } = useQuery({
-    queryKey: ['track', effectiveSelectedTrackId],
-    queryFn: () => fetchTrackById(effectiveSelectedTrackId!),
-    enabled: activeTab === 'tracks' && effectiveSelectedTrackId !== null,
-  });
-
-  const signalsFromTrackResponse = [
-    { signal_id: 453, signal_name: 'SIG:AW148(CO) ACTON WELLS JCN', elr: 'LPC5', mileage: 3.1745 },
-    { signal_id: 2848, signal_name: 'SIG:SN169(CO) IECC PDRF14 LOC R3/107', elr: 'ONM1', mileage: 4.2126 },
-  ];
-
-  const tracksFromSignalResponse = [
-    { track_id: 55, source: 'Acton Central', target: 'Willesden Junction', elr: 'LPC5', mileage: 3.1745 },
-    { track_id: 4084, source: 'Wembley Central', target: 'Acton Central', elr: 'PLC5', mileage: 3.0245 },
-  ];
   return (
     <div>
       <h1 className="text-xl font-bold pb-8 pt-8 text-gray-900">CrossTech Platform</h1>
@@ -151,7 +153,7 @@ function App() {
               <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md max-h-[100vh]">
                 <div className="space-y-3">
                   <h3 className="text-m font-semibold text-gray-900">All signals assoicated with track id {selectedTrackId}</h3>
-                  {signalsFromTrackResponse.map((signal, index) => (
+                  {tracksByIDData?.signals.map((signal, index) => (
                     <div key={signal.signal_id}>
                       <div className="rounded-xl bg-gray-100 px-4 py-6 text-center">
                         <h3 className="text-sm font-semibold text-gray-900">{signal.signal_name}</h3>
@@ -166,7 +168,7 @@ function App() {
                         </div>
                       </div>
 
-                      {index < signalsFromTrackResponse.length - 1 && (
+                      {index < tracksByIDData.signals.length - 1 && (
                         <div className="my-3 flex justify-center">
                           <div className="h-8 border-l-2 border-dashed border-gray-300" />
                         </div>
@@ -199,7 +201,7 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {signalsData.map((sd) => (
+                      {signalsData?.map((sd) => (
                         <tr
                           key={sd.signal_id}
                           className={`cursor-pointer border-t border-gray-200 hover:bg-gray-100 ${
@@ -219,7 +221,7 @@ function App() {
               <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md max-h-[100vh]">
                 <div className="space-y-3">
                   <h3 className="text-m font-semibold text-gray-900">All tracks assoicated with signal {selectedSignalId}</h3>
-                  {tracksFromSignalResponse.map((track, index) => (
+                  {signalsByIDData?.tracks.map((track, index) => (
                     <div key={track.track_id}>
                       <div className="rounded-xl bg-gray-100 px-4 py-6 text-center">
                         <h3 className="text-sm font-semibold text-gray-900">{track.elr}</h3>
@@ -240,7 +242,7 @@ function App() {
                         </div>
                       </div>
 
-                      {index < signalsFromTrackResponse.length - 1 && (
+                      {index < signalsByIDData.tracks.length - 1 && (
                         <div className="my-3 flex justify-center">
                           <div className="h-8 border-l-2 border-dashed border-gray-300" />
                         </div>

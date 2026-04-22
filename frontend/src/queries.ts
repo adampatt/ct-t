@@ -2,96 +2,84 @@ import { z } from 'zod';
 
 const SignalSchema = z.object({
   signal_id: z.number(),
-  signal_name: z.string(),
-  elr: z.string().optional().nullable(),
-  mileage: z.number().optional().nullable(),
+  signal_name: z.string().nullable(),
 });
 
 const SignalsSchema = z.array(SignalSchema);
 
 type Signal = z.infer<typeof SignalSchema>;
 
-export const fetchSignals = async (): Promise<Signal[] | null> => {
-  const response = await fetch('/api/signals');
+const SignalTrackSchema = z.object({
+  track_id: z.number(),
+  source: z.string(),
+  target: z.string(),
+  elr: z.string(),
+  mileage: z.number().nullable(),
+});
 
-  if (!response.ok) {
-    // throw error for useQuery to consume
-    throw new Error(`HTTP error: ${response.status}`);
-  }
+const SignalResponseSchema = z.object({
+  signal_id: z.number(),
+  signal_name: z.string().nullable(),
+  tracks: z.array(SignalTrackSchema),
+});
 
-  const json = await response.json();
+type SignalResponse = z.infer<typeof SignalResponseSchema>;
 
-  // Using safeparse here to return error without try / catch - https://zod.dev/basics
-  const result = SignalsSchema.safeParse(json);
-
-  if (!result.success) {
-    throw new Error(`Invalid response ${result.error}`);
-  }
-
-  return result.data;
-};
-
-export const fetchSignalByID = async (id: number): Promise<Signal | null> => {
-  const response = await fetch(`/api/signals/:${id}`);
-
-  if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status}`);
-  }
-
-  const json = await response.json();
-
-  const result = SignalSchema.safeParse(json);
-
-  if (!result.success) {
-    throw new Error(`Invalid response ${result.error}`);
-  }
-
-  return result.data;
-};
+const TrackSignalSchema = z.object({
+  signal_id: z.number(),
+  signal_name: z.string().nullable(),
+  elr: z.string(),
+  mileage: z.number().nullable(),
+});
 
 const TrackSchema = z.object({
   track_id: z.number(),
-  source: z.string().nullable(),
-  target: z.string().nullable(),
-  signal_ids: z.array(SignalSchema),
+  source: z.string(),
+  target: z.string(),
+  signals: z.array(TrackSignalSchema),
 });
 
 const TracksSchema = z.array(TrackSchema);
 
 type Track = z.infer<typeof TrackSchema>;
 
-export const fetchTracks = async (): Promise<Track[] | null> => {
-  const response = await fetch('/api/tracks');
+export const fetchSignals = async (): Promise<Signal[]> => {
+  const response = await fetch('/api/signals');
+  // Throw error, useQuery is looking for this not a null value
+  if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
 
-  if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status}`);
-  }
-
-  const json = await response.json();
-
-  const result = TracksSchema.safeParse(json);
-
-  if (!result.success) {
-    throw new Error(`Invalid response ${result.error}`);
-  }
+  const result = SignalsSchema.safeParse(await response.json());
+  if (!result.success) throw new Error(`Invalid response: ${result.error}`);
 
   return result.data;
 };
 
-export const fetchTrackById = async (id: number): Promise<Track | null> => {
+export const fetchSignalByID = async (id: number): Promise<SignalResponse> => {
+  const response = await fetch(`/api/signals/${id}`);
+  if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+  const result = SignalResponseSchema.safeParse(await response.json());
+  if (!result.success) throw new Error(`Invalid response: ${result.error}`);
+
+  return result.data;
+};
+
+export const fetchTracks = async (): Promise<Track[]> => {
+  const response = await fetch('/api/tracks');
+  if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+  const result = TracksSchema.safeParse(await response.json());
+  if (!result.success) throw new Error(`Invalid response: ${result.error}`);
+
+  return result.data;
+};
+
+export const fetchTrackById = async (id: number): Promise<Track> => {
   const response = await fetch(`/api/tracks/${id}`);
+  if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
 
-  if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status}`);
-  }
-
-  const json = await response.json();
-
-  const result = TrackSchema.safeParse(json);
-
-  if (!result.success) {
-    throw new Error(`Invalid response ${result.error}`);
-  }
+  const result = TrackSchema.safeParse(await response.json());
+  if (!result.success) throw new Error(`Invalid response: ${result.error}`);
 
   return result.data;
 };
