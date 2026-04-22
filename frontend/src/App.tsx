@@ -64,9 +64,9 @@ function App() {
   }, [tracksData, trackIdFilter, stationFilter]);
 
   return (
-    <div>
-      <h1 className="text-xl font-bold pb-8 pt-8 text-gray-900">CrossTech Platform</h1>
-      <div className="flex h-screen flex-col overflow-hidden rounded-l shadow-sm">
+    <div className="flex h-screen flex-col">
+      <h1 className="shrink-0 px-0 pb-8 pt-8 text-xl font-bold text-gray-900">CrossTech Platform</h1>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-l shadow-sm">
         {/* Tabs */}
         <div className="flex w-1/3 shrink-0">
           <button
@@ -91,7 +91,7 @@ function App() {
         {/* Content box */}
         <div className="flex min-h-0 flex-1 flex-col p-4">
           {activeTab === 'tracks' && (
-            <div className="flex w-full gap-4 p-4">
+            <div className="flex min-h-0 flex-1 w-full gap-4 p-4">
               <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-gray-50 p-4">
                 {tracksIsPending && 'Loading...'}
                 {tracksError && `An error has occurred: ${tracksError.message}`}
@@ -150,7 +150,7 @@ function App() {
                   </table>
                 </div>
               </div>
-              <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md max-h-[100vh]">
+              <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md">
                 <div className="space-y-3">
                   <h3 className="text-m font-semibold text-gray-900">All signals assoicated with track id {selectedTrackId}</h3>
                   {tracksByIDData?.signals.map((signal, index) => (
@@ -181,7 +181,7 @@ function App() {
           )}
 
           {activeTab === 'signals' && (
-            <div className="flex w-full gap-4 p-4">
+            <div className="flex min-h-0 flex-1 w-full gap-4 p-4">
               <div className="flex min-h-0 flex-1 flex-col rounded-2xl bg-gray-50 p-4">
                 {signalsIsPending && 'Loading...'}
                 {signalsError && `An error has occurred: ${signalsError.message}`}
@@ -205,7 +205,7 @@ function App() {
                         <tr
                           key={sd.signal_id}
                           className={`cursor-pointer border-t border-gray-200 hover:bg-gray-100 ${
-                            effectiveSelectedSignalId === sd.signal_id ? 'bg-gray-300' : 'bg-white-100'
+                            effectiveSelectedSignalId === sd.signal_id ? 'bg-gray-300' : 'bg-white'
                           }`}
                           onClick={() => setSelectedSignalId(sd.signal_id)}
                         >
@@ -218,7 +218,7 @@ function App() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md max-h-[100vh]">
+              <div className="flex-1 overflow-auto rounded-2xl bg-white p-6 shadow-md">
                 <div className="space-y-3">
                   <h3 className="text-m font-semibold text-gray-900">All tracks assoicated with signal {selectedSignalId}</h3>
                   {signalsByIDData?.tracks.map((track, index) => (
