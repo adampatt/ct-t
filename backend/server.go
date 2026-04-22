@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ct/test/internal/signals"
 	"ct/test/internal/tracks"
 
 	"github.com/labstack/echo/v5"
@@ -13,6 +14,7 @@ func main() {
 
 	e.GET("/tracks", tracks.GetTracks)
 	e.GET("/tracks/:id", tracks.GetTrackByID)
+	e.GET("/signals", signals.GetSignals)
 
 	if err := e.Start(":1323"); err != nil {
 		e.Logger.Error("failed to start server", "error", err)

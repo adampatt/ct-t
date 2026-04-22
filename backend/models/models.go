@@ -13,3 +13,8 @@ type TrackInput struct {
 	Target  string         `json:"target"`
 	Signals *[]SignalInput `json:"signal_ids"`
 }
+
+type Signal struct {
+	SignalId   int    `json:"signal_id"`
+	SignalName string `json:"signal_name"`
+}
