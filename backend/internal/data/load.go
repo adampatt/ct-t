@@ -4,8 +4,21 @@ import (
 	"bytes"
 	"ct/test/models"
 	"encoding/json"
+	"fmt"
 	"os"
 )
+
+func validate(tracks []models.TrackResponse) error {
+	for _, t := range tracks {
+		if t.Source == "" {
+			return fmt.Errorf("track with id %d has no source", t.TrackId)
+		}
+		if t.Target == "" {
+			return fmt.Errorf("track with id %d missing target", t.TrackId)
+		}
+	}
+	return nil
+}
 
 func Load() ([]models.TrackResponse, []models.Signal, error) {
 	data, err := os.ReadFile("data.json")
@@ -15,12 +28,21 @@ func Load() ([]models.TrackResponse, []models.Signal, error) {
 
 	data = bytes.ReplaceAll(data, []byte("NaN"), []byte("null"))
 
-	var tracks []models.TrackInput
-	if err := json.Unmarshal(data, &tracks); err != nil {
+	var t []models.TrackInput
+	if err := json.Unmarshal(data, &t); err != nil {
 		return nil, nil, err
 	}
 
-	return transform(tracks)
+	tracks, signals, err := transform(t)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := validate(tracks); err != nil {
+		return nil, nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	return tracks, signals, nil
 }
 
 func transform(input []models.TrackInput) ([]models.TrackResponse, []models.Signal, error) {
