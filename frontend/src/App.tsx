@@ -1,7 +1,7 @@
 import './App.css';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { fetchSignals } from './queries';
+import { fetchSignals, fetchTracks } from './queries';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'tracks' | 'signals'>('tracks');
@@ -19,13 +19,10 @@ function App() {
   const {
     isPending: tracksIsPending,
     error: tracksError,
-    data: tracksData,
+    data: tracksData = [],
   } = useQuery({
     queryKey: ['tracks'],
-    queryFn: async () => {
-      const response = await fetch('/api/tracks');
-      return await response.json();
-    },
+    queryFn: fetchTracks,
     enabled: activeTab === 'tracks',
   });
 
@@ -61,7 +58,7 @@ function App() {
               {tracksIsPending && 'Loading...'}
               {tracksError && `An error has occurred: ${tracksError.message}`}
               <h1 className="mb-2 text-lg font-semibold">Track content to go here</h1>
-              {/* <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+              <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Track ID</th>
@@ -72,16 +69,16 @@ function App() {
                 <tbody>
                   {tracksData.map((td) => (
                     <tr
-                      key={td.trackId}
+                      key={td.track_id}
                       className="border-t border-gray-200"
                     >
-                      <td className="px-4 py-3 text-sm text-gray-800">{td.trackId}</td>
+                      <td className="px-4 py-3 text-sm text-gray-800">{td.track_id}</td>
                       <td className="px-4 py-3 text-sm text-gray-800">{td.source}</td>
                       <td className="px-4 py-3 text-sm text-gray-800">{td.target}</td>
                     </tr>
                   ))}
                 </tbody>
-              </table> */}
+              </table>
             </div>
           )}
 
